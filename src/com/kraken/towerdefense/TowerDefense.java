@@ -18,10 +18,11 @@ public class TowerDefense extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         setResizable(false);
-        setVisible(true);
 
         Screen screen = new Screen(this);
         this.add(screen);
+
+        setVisible(true);
     }
 
 }
