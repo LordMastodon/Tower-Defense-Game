@@ -1,11 +1,13 @@
 package com.kraken.towerdefense.graphics;
 
 import com.kraken.towerdefense.TowerDefense;
-import com.kraken.towerdefense.listener.KeyHandler;
 import com.kraken.towerdefense.scene.Scene;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
 
 public class Screen extends JPanel implements Runnable {
 
@@ -19,13 +21,15 @@ public class Screen extends JPanel implements Runnable {
 
     private boolean running = false;
 
+    public RoundRectangle2D.Float playGame, quitGame;
+    public boolean playGameHighlighted, quitGameHighlighted;
+
     @Override
     public void run() {
         long lastFrame = System.currentTimeMillis();
         int frames = 0;
 
         running = true;
-        scene = Scene.MENU;
 
         while (running) {
             repaint();
@@ -46,32 +50,79 @@ public class Screen extends JPanel implements Runnable {
     public Screen(TowerDefense tD) {
         thread.start();
 
-        tD.addKeyListener(new KeyHandler(this));
+        addMouseMotionListener(new MouseAdapter() {
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                playGameHighlighted = playGame.contains(e.getPoint());
+                quitGameHighlighted = quitGame.contains(e.getPoint());
+                repaint();
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (playGameHighlighted) {
+                    scene = Scene.GAME;
+                    repaint();
+
+                    System.out.println("playGameHighlighted and mouse clicked");
+                }
+
+                if (quitGameHighlighted) {
+                    running = false;
+
+                    System.out.println("quitGameHighlighted and mouse clicked");
+                }
+
+                System.out.println("mouse clicked");
+            }
+        });
 
         this.tD = tD;
+        scene = Scene.MENU;
+
+        setBackground(new Color(217, 217, 217));
     }
 
     @Override
     public void paintComponent(Graphics g2) {
         super.paintComponent(g2);
 
+        playGame = new RoundRectangle2D.Float((getWidth() / 2) - 200, (getHeight() / 2) - 100, 400, 100, 10, 10);
+        quitGame = new RoundRectangle2D.Float((getWidth() / 2) - 200, (getHeight() / 2) + 20, 400, 100, 10, 10);
+
         Graphics2D g = (Graphics2D) g2.create();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-//        g.clearRect(0, 0, getWidth(), getHeight());
+        g.clearRect(0, 0, getWidth(), getHeight());
 
         g.drawString("FPS: " + FPS, 10, 10);
 
         if (scene == Scene.MENU) {
+            if (playGameHighlighted) {
+                g.setColor(new Color(255, 152, 56));
+            } else {
+                g.setColor(new Color(4, 47, 61));
+            }
+            g.fill(playGame);
+
+            if (quitGameHighlighted) {
+                g.setColor(new Color(255, 152, 56));
+            } else {
+                g.setColor(new Color(4, 47, 61));
+            }
+            g.fill(quitGame);
+
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Gisha", Font.PLAIN, 20));
+            g.drawString("Play", (getWidth() / 2) - (g.getFontMetrics().stringWidth("Play") / 2), (getHeight() / 2) - 45);
+            g.drawString("Quit", (getWidth() / 2) - (g.getFontMetrics().stringWidth("Quit") / 2), (getHeight() / 2) + 75);
+
             g.setColor(Color.BLACK);
-
-            g.fillRoundRect((getWidth() / 2) - 100, (getHeight() / 2) - 50, 200, 100, 25, 25);
-        }
-    }
-
-    public class KeyTyped {
-        public void keyESC() {
-            running = false;
+            g.setFont(new Font("Gisha", Font.PLAIN, 30));
+            g.drawString("Tower Defense Menu", (getWidth() / 2) - (g.getFontMetrics().stringWidth("Tower Defense Menu") / 2), (getHeight() / 4) - 15);
+            g.draw(playGame);
+            g.draw(quitGame);
         }
     }
 
