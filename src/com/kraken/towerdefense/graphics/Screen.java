@@ -1,19 +1,21 @@
 package com.kraken.towerdefense.graphics;
 
 import com.kraken.towerdefense.TowerDefense;
+import com.kraken.towerdefense.logic.User;
 import com.kraken.towerdefense.scene.Scene;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.io.File;
+import java.io.IOException;
 
 public class Screen extends JPanel implements Runnable {
 
     Thread thread = new Thread(this);
-
-    private int FPS = 0;
 
     public Scene scene;
 
@@ -24,24 +26,37 @@ public class Screen extends JPanel implements Runnable {
     public RoundRectangle2D.Float playGame, quitGame;
     public boolean playGameHighlighted, quitGameHighlighted;
 
-    @Override
-    public void run() {
-        long lastFrame = System.currentTimeMillis();
-        int frames = 0;
+    int xSquares = 20, ySquares = 10;
+
+    User user;
+
+    Image heartsIcon, moneyIcon;
+
+    public void loadGame() {
+        user = new User(this);
+
+        try {
+            heartsIcon = ImageIO.read(new File("res/Hearts.png"));
+            moneyIcon = ImageIO.read(new File("res/Money.png"));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         running = true;
+    }
+
+    public void startGame(User user) {
+        user.createPlayer();
+
+        this.scene = Scene.GAME;
+    }
+
+    @Override
+    public void run() {
+        loadGame();
 
         while (running) {
-            repaint();
 
-            frames++;
-
-            if (System.currentTimeMillis() - 1000 >= lastFrame) {
-                FPS = frames;
-                frames = 0;
-
-                lastFrame = System.currentTimeMillis();
-            }
         }
 
         System.exit(0);
@@ -50,33 +65,32 @@ public class Screen extends JPanel implements Runnable {
     public Screen(TowerDefense tD) {
         thread.start();
 
-        addMouseMotionListener(new MouseAdapter() {
-
+        MouseAdapter ma = new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
                 playGameHighlighted = playGame.contains(e.getPoint());
                 quitGameHighlighted = quitGame.contains(e.getPoint());
+
                 repaint();
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
                 if (playGameHighlighted) {
-                    scene = Scene.GAME;
-                    repaint();
+                    startGame(user);
 
-                    System.out.println("playGameHighlighted and mouse clicked");
+                    repaint();
                 }
 
                 if (quitGameHighlighted) {
                     running = false;
-
-                    System.out.println("quitGameHighlighted and mouse clicked");
                 }
-
-                System.out.println("mouse clicked");
             }
-        });
+        };
+
+        addMouseMotionListener(ma);
+        addMouseListener(ma);
+        addMouseWheelListener(ma);
 
         this.tD = tD;
         scene = Scene.MENU;
@@ -96,9 +110,21 @@ public class Screen extends JPanel implements Runnable {
 
         g.clearRect(0, 0, getWidth(), getHeight());
 
-        g.drawString("FPS: " + FPS, 10, 10);
+        g.setColor(new Color(217, 217, 217));
+
+        for (int i = 0; i < xSquares; i++) {
+            for (int j = 0; j < ySquares; j++) {
+                g.drawRect(i + (i * 50) + 45, j + (j * 50) + 50, 49, 49);
+            }
+        }
+
+        g.setColor(new Color(155, 155, 155, 200));
+        g.fillRect((50 * xSquares) + 75, 50, 240, (50 * ySquares) + 10);
+        g.fillRect(45, (50 * ySquares) + 70, (50 * xSquares) + 270, 150);
 
         if (scene == Scene.MENU) {
+            g.fillRect(getWidth() / 4, getHeight() / 8, getWidth() / 2, getHeight() / 3 * 2);
+
             if (playGameHighlighted) {
                 g.setColor(new Color(255, 152, 56));
             } else {
@@ -123,7 +149,11 @@ public class Screen extends JPanel implements Runnable {
             g.drawString("Tower Defense Menu", (getWidth() / 2) - (g.getFontMetrics().stringWidth("Tower Defense Menu") / 2), (getHeight() / 4) - 15);
             g.draw(playGame);
             g.draw(quitGame);
+        } else if (scene == Scene.GAME) {
+            Graphics2D gBuyPane = (Graphics2D) g.create((50 * xSquares) + 75, 50, 240, (50 * ySquares) + 10);
+
+            gBuyPane.drawImage(heartsIcon, 5, 4, 32, 32, null);
+            gBuyPane.drawImage(moneyIcon, 5, 34, 32, 32, null);
         }
     }
-
 }
