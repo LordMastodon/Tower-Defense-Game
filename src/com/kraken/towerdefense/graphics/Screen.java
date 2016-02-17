@@ -164,7 +164,8 @@ public class Screen extends JPanel implements Runnable {
                     if (Tower.towerList[towerNumber] != null) {
                         Tower currentTower = Tower.towerList[towerNumber];
 
-                        gBuyPane.drawImage(currentTower.getTexture(), (83 * j) + 5, (85 * i) + 85, 64, 64, null);
+                        gBuyPane.drawImage(currentTower.getTexture(), (83 * j) + 5, (85 * i)
+ + 85, 64, 64, null);
 
                         Point middleOfImage = new Point((83 * j) + 37, (85 * i) + 117);
 
@@ -180,11 +181,10 @@ public class Screen extends JPanel implements Runnable {
         g.drawString("FPS: " + calcFPS(frames, oldFrames, millis, oldMillis), 10, 10);
         
         frames++;
-        
+
         if (millis - 1 == oldMillis) {
             oldMillis = millis;
             oldFrames = frames;
-
             frames = 0;
         }
     }
