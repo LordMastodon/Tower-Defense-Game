@@ -3,6 +3,7 @@ package com.kraken.towerdefense.graphics;
 import com.kraken.towerdefense.TowerDefense;
 import com.kraken.towerdefense.logic.User;
 import com.kraken.towerdefense.scene.Scene;
+import com.kraken.towerdefense.tower.Tower;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -21,8 +22,6 @@ public class Screen extends JPanel implements Runnable {
 
     TowerDefense tD;
 
-    private boolean running = false;
-
     public RoundRectangle2D.Float playGame, quitGame;
     public boolean playGameHighlighted, quitGameHighlighted;
 
@@ -31,6 +30,8 @@ public class Screen extends JPanel implements Runnable {
     User user;
 
     Image heartsIcon, moneyIcon;
+
+    public double towerWidth = 1, towerHeight = 1;
 
     public void loadGame() {
         user = new User(this);
@@ -41,8 +42,6 @@ public class Screen extends JPanel implements Runnable {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
-        running = true;
     }
 
     public void startGame(User user) {
@@ -54,12 +53,6 @@ public class Screen extends JPanel implements Runnable {
     @Override
     public void run() {
         loadGame();
-
-        while (running) {
-
-        }
-
-        System.exit(0);
     }
 
     public Screen(TowerDefense tD) {
@@ -83,7 +76,7 @@ public class Screen extends JPanel implements Runnable {
                 }
 
                 if (quitGameHighlighted) {
-                    running = false;
+                    System.exit(0);
                 }
             }
         };
@@ -98,10 +91,15 @@ public class Screen extends JPanel implements Runnable {
         setBackground(new Color(217, 217, 217));
     }
 
+    int frames, oldFrames;
+    long millis, oldMillis;
+    
     @Override
     public void paintComponent(Graphics g2) {
         super.paintComponent(g2);
-
+        
+        millis = System.currentTimeMillis();
+        
         playGame = new RoundRectangle2D.Float((getWidth() / 2) - 200, (getHeight() / 2) - 100, 400, 100, 10, 10);
         quitGame = new RoundRectangle2D.Float((getWidth() / 2) - 200, (getHeight() / 2) + 20, 400, 100, 10, 10);
 
@@ -109,8 +107,10 @@ public class Screen extends JPanel implements Runnable {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         g.clearRect(0, 0, getWidth(), getHeight());
-
         g.setColor(new Color(217, 217, 217));
+
+        towerWidth = 49;
+        towerHeight = 49;
 
         for (int i = 0; i < xSquares; i++) {
             for (int j = 0; j < ySquares; j++) {
@@ -154,6 +154,43 @@ public class Screen extends JPanel implements Runnable {
 
             gBuyPane.drawImage(heartsIcon, 5, 4, 32, 32, null);
             gBuyPane.drawImage(moneyIcon, 5, 34, 32, 32, null);
+
+            gBuyPane.setColor(Color.BLACK);
+            gBuyPane.drawLine(10, 75, 225, 75);
+
+            int towerNumber = 0;
+            for (int i = 0; i < 5; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (Tower.towerList[towerNumber] != null) {
+                        Tower currentTower = Tower.towerList[towerNumber];
+
+                        gBuyPane.drawImage(currentTower.getTexture(), (83 * j) + 5, (85 * i) + 85, 64, 64, null);
+
+                        Point middleOfImage = new Point((83 * j) + 37, (85 * i) + 117);
+
+                        gBuyPane.setFont(currentTower.getFont());
+                        gBuyPane.drawString(currentTower.getName(), middleOfImage.x - (g.getFontMetrics(currentTower.getFont()).stringWidth(currentTower.getName()) / 2), middleOfImage.y + 45);
+                    }
+
+                    towerNumber++;
+                }
+            }
         }
+        
+        g.drawString("FPS: " + calcFPS(frames, oldFrames, millis, oldMillis), 10, 10);
+        
+        frames++;
+        
+        if (millis - 1 == oldMillis) {
+            oldMillis = millis;
+            oldFrames = frames;
+
+            frames = 0;
+        }
+    }
+    
+    public int calcFPS (int _frames, int _oldFrames, long _oldMillis, long _millis) {
+        int fpsIncrease = (_frames - _oldFrames) / (int ) (_millis - _oldMillis);
+        return _frames + (fpsIncrease * (1000 - (int) _millis));
     }
 }
